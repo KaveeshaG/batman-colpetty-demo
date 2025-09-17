@@ -6,6 +6,10 @@ resources:
 
 namespace: colpetty-production
 
+images:
+  - name: batman-app
+    newTag: latest
+
 patchesStrategicMerge:
   - replica-patch.yaml
 
