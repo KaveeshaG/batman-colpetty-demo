@@ -69,31 +69,50 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
 
     - name: Setup Kustomize
       uses: imranismail/setup-kustomize@v2
 
-    - name: Extract Image Tag
-      id: extract-tag
+    - name: Debug - Show image tag
       run: |
-        # Extract just the tag from the full image reference
-        TAG=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | cut -d':' -f2)
-        echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        echo "Full image tag from build job: ${{ needs.build-and-push.outputs.image-tag }}"
+        echo "Repository: ${{ github.repository }}"
+        echo "SHA: ${{ github.sha }}"
 
     - name: Update Image Tag in Staging
       run: |
         cd k8s-manifests/overlays/staging
-        kustomize edit set image batman-app=ghcr.io/${{ github.repository }}:${{ steps.extract-tag.outputs.tag }}
+        # Use the commit SHA as the tag
+        IMAGE_TAG="batman-$(echo ${{ github.sha }} | head -c7)"
+        echo "Using image tag: ${IMAGE_TAG}"
+        kustomize edit set image batman-app=ghcr.io/${{ github.repository }}:${IMAGE_TAG}
+        cat kustomization.yaml
         
     - name: Update Image Tag in Production
       run: |
         cd k8s-manifests/overlays/production
-        kustomize edit set image batman-app=ghcr.io/${{ github.repository }}:${{ steps.extract-tag.outputs.tag }}
+        # Use the commit SHA as the tag
+        IMAGE_TAG="batman-$(echo ${{ github.sha }} | head -c7)"
+        echo "Using image tag: ${IMAGE_TAG}"
+        kustomize edit set image batman-app=ghcr.io/${{ github.repository }}:${IMAGE_TAG}
+        cat kustomization.yaml
 
     - name: Commit and Push Updates
       run: |
-        git config --local user.email "batman@gotham.city"
-        git config --local user.name "Batman Bot"
+        # Configure git
+        git config --global user.email "batman@gotham.city"
+        git config --global user.name "Batman Bot"
+        git config --global init.defaultBranch main
+        
+        # Add and commit changes
         git add k8s-manifests/
-        git diff --staged --quiet || git commit -m "🦇 Update image to ${{ steps.extract-tag.outputs.tag }}"
-        git push
+        
+        # Only commit if there are changes
+        if ! git diff --staged --quiet; then
+          IMAGE_TAG="batman-$(echo ${{ github.sha }} | head -c7)"
+          git commit -m "🦇 Update image to ${IMAGE_TAG}"
+          git push
+        else
+          echo "No changes to commit"
+        fi
