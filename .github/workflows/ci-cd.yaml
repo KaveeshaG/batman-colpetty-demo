@@ -41,11 +41,13 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        images: ${{ env.REGISTRY }}/${{ github.repository }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
           type=sha,prefix=batman-
+        flavor: |
+          latest=auto
 
     - name: Build and Push Batman's Image
       id: build
@@ -75,37 +77,66 @@ jobs:
     - name: Setup Kustomize
       uses: imranismail/setup-kustomize@v2
 
-    - name: Debug - Show image tag
+    - name: Extract Image Details
+      id: extract
       run: |
-        echo "Full image tag from build job: ${{ needs.build-and-push.outputs.image-tag }}"
-        echo "Repository: ${{ github.repository }}"
-        echo "SHA: ${{ github.sha }}"
-        echo "Current branch: $(git branch --show-current)"
+        # Force lowercase repository name
+        REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        IMAGE_TAG="batman-$(echo ${{ github.sha }} | head -c7)"
+        FULL_IMAGE="${{ env.REGISTRY }}/${REPO_LOWER}:${IMAGE_TAG}"
+        
+        echo "repo_lower=${REPO_LOWER}" >> $GITHUB_OUTPUT
+        echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "full_image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
+        
+        echo "Repository (lowercase): ${REPO_LOWER}"
+        echo "Image tag: ${IMAGE_TAG}" 
+        echo "Full image: ${FULL_IMAGE}"
 
     - name: Update Image Tag in Staging
       run: |
         cd k8s-manifests/overlays/staging
-        # Use the commit SHA as the tag
-        IMAGE_TAG="batman-$(echo ${{ github.sha }} | head -c7)"
-        echo "Using image tag: ${IMAGE_TAG}"
-        kustomize edit set image batman-app=ghcr.io/${{ github.repository }}:${IMAGE_TAG}
-        echo "Updated staging kustomization.yaml:"
-        cat kustomization.yaml
+        echo "Before update:"
+        cat kustomization.yaml | grep -A5 images || echo "No images section found"
+        
+        # Use newName and newTag to be explicit
+        kustomize edit set image batman-app=${{ steps.extract.outputs.full_image }}
+        
+        echo "After update:"
+        cat kustomization.yaml | grep -A5 images
         
     - name: Update Image Tag in Production
       run: |
         cd k8s-manifests/overlays/production
-        # Use the commit SHA as the tag
-        IMAGE_TAG="batman-$(echo ${{ github.sha }} | head -c7)"
-        echo "Using image tag: ${IMAGE_TAG}"
-        kustomize edit set image batman-app=ghcr.io/${{ github.repository }}:${IMAGE_TAG}
-        echo "Updated production kustomization.yaml:"
-        cat kustomization.yaml
+        echo "Before update:"
+        cat kustomization.yaml | grep -A5 images || echo "No images section found"
+        
+        # Use newName and newTag to be explicit  
+        kustomize edit set image batman-app=${{ steps.extract.outputs.full_image }}
+        
+        echo "After update:"
+        cat kustomization.yaml | grep -A5 images
+
+    - name: Verify Changes
+      run: |
+        echo "=== STAGING KUSTOMIZATION ==="
+        cat k8s-manifests/overlays/staging/kustomization.yaml
+        echo "=== PRODUCTION KUSTOMIZATION ==="
+        cat k8s-manifests/overlays/production/kustomization.yaml
+        
+        # Test what will be generated
+        echo "=== STAGING GENERATED DEPLOYMENT ==="
+        cd k8s-manifests/overlays/staging
+        kustomize build . | grep -A3 -B3 "image:"
+        
+        echo "=== PRODUCTION GENERATED DEPLOYMENT ==="
+        cd ../production
+        kustomize build . | grep -A3 -B3 "image:"
 
     - name: Commit and Push Updates
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: "🦇 Update image to batman-${{ github.sha }}"
+        commit_message: "🦇 Update image to ${{ steps.extract.outputs.image_tag }}"
         branch: main
         file_pattern: k8s-manifests/
         commit_user_name: KaveeshaG
