@@ -2,23 +2,24 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../base
+- ../../base
 
 namespace: colpetty-staging
 
 images:
-  - name: batman-app
-    newTag: latest
+- name: batman-app
+  newName: ghcr.io/KaveeshaG/batman-colpetty-demo
+  newTag: batman-eb6bc63
 
 patchesStrategicMerge:
-  - replica-patch.yaml
+- replica-patch.yaml
 
 commonLabels:
   environment: staging
 
 configMapGenerator:
-  - name: batman-config
-    behavior: merge
-    literals:
-      - environment=staging
-      - debug=true
+- behavior: merge
+  literals:
+  - environment=staging
+  - debug=true
+  name: batman-config
