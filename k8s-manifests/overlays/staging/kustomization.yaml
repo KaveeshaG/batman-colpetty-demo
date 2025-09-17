@@ -8,7 +8,7 @@ namespace: colpetty-staging
 
 images:
 - name: batman-app
-  newName: ghcr.io/KaveeshaG/batman-colpetty-demo
+  newName: ghcr.io/kaveeshag/batman-colpetty-demo
   newTag: batman-36a1307
 
 patchesStrategicMerge:
