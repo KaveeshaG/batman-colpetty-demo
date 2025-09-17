@@ -9,7 +9,7 @@ namespace: colpetty-production
 images:
 - name: batman-app
   newName: ghcr.io/kaveeshag/batman-colpetty-demo
-  newTag: batman-cfde5d2
+  newTag: batman-ea54332
   
 patchesStrategicMerge:
 - replica-patch.yaml
