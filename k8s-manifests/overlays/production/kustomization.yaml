@@ -8,7 +8,7 @@ namespace: colpetty-production
 
 images:
 - name: batman-app
-  newName: ghcr.io/KaveeshaG/batman-colpetty-demo
+  newName: ghcr.io/kaveeshag/batman-colpetty-demo
   newTag: batman-eb6bc63
 
 patchesStrategicMerge:
