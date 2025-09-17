@@ -10,7 +10,7 @@ images:
 - name: batman-app
   newName: ghcr.io/kaveeshag/batman-colpetty-demo
   newTag: batman-eb6bc63
-
+  
 patchesStrategicMerge:
 - replica-patch.yaml
 
