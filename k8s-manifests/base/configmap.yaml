@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: batman-config
+data:
+  city: "Colpetty"
+  hero: "Batman"
+  version: "1.0.0"
+  message: "The Dark Knight protects Colpetty!"

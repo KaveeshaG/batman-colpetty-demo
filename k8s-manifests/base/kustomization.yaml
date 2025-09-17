@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+
+images:
+  - name: batman-app
+    newTag: latest
+
+commonLabels:
+  app: colpetty-guardian
+  version: v1.0.0

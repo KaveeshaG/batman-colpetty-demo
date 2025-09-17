@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colpetty-guardian
+  labels:
+    app: colpetty-guardian
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: colpetty-guardian
+  template:
+    metadata:
+      labels:
+        app: colpetty-guardian
+    spec:
+      containers:
+      - name: guardian
+        image: batman-app:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: CITY_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: batman-config
+              key: city
+        - name: HERO_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: batman-config
+              key: hero
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
