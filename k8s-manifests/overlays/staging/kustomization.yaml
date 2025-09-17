@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: colpetty-staging
+
+patchesStrategicMerge:
+  - replica-patch.yaml
+
+commonLabels:
+  environment: staging
+
+configMapGenerator:
+  - name: batman-config
+    behavior: merge
+    literals:
+      - environment=staging
+      - debug=true
