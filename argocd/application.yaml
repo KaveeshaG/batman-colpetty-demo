@@ -9,7 +9,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/YOUR_USERNAME/batman-colpetty-demo.git
+    repoURL: https://github.com/KaveeshaG/batman-colpetty-demo.git
     targetRevision: main
     path: k8s-manifests/overlays/staging
   destination:
@@ -44,7 +44,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/YOUR_USERNAME/batman-colpetty-demo.git
+    repoURL: https://github.com/KaveeshaG/batman-colpetty-demo.git
     targetRevision: main
     path: k8s-manifests/overlays/production
   destination:
