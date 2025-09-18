@@ -8,8 +8,8 @@ namespace: colpetty-staging
 
 images:
 - name: batman-app
-  newName: ghcr.io/kaveeshag/batman-colpetty-demo
-  newTag: batman-36a1307
+  newName: nginx
+  newTag: fake-malicious-tag1
 
 patchesStrategicMerge:
 - replica-patch.yaml
